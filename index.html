@@ -608,10 +608,14 @@ size: document.getElementById('e_size').value === 'Custom' ? document.getElement
 // ─── WHATSAPP ─────────────────────────────────────────────
 function sendStatusWA(idx) {
   const o = orders[idx];
-  const msg = (WA_MSGS[o.status] || '').replace(/{name}/g, o.name).replace('{balance}', o.balance);
+  const msg = (WA_MSGS[o.status] || '')
+    .replace(/{name}/g, o.name)
+    .replace('{balance}', o.balance);
   orders[idx].lastMsg = Date.now();
   saveLocal();
-  window.open('https://wa.me/' + o.phone + '?text=' + encodeURIComponent(msg), '_blank');
+  const phone = String(o.phone).replace(/\D/g, '');
+  const url = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
   render();
 }
 function openRemind(idx) {
