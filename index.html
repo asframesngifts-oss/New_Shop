@@ -1080,11 +1080,11 @@ function doKhataSearch(){
     // Orders table
     html += '<div style="background:var(--surface);border-radius:8px;overflow:auto">';
     html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-    html += '<thead><tr style="background:var(--surface2)"><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">#</th><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">Size</th><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">Status</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Amount</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Paid</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Pending</th></tr></thead><tbody>';
-
-    c.orders.forEach((o,i)=>{
+    html += '<thead><tr style="background:var(--surface2)"><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">#</th><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">Size</th><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">Status</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Amount</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Paid</th><th style="padding:7px 8px;text-align:right;color:var(--text2);font-weight:500">Pending</th><th style="padding:7px 8px;text-align:left;color:var(--text2);font-weight:500">Action</th></tr></thead><tbody>';
+   c.orders.forEach((o,i)=>{
       const bal = parseFloat(o.balance)||0;
       const sc = 's-'+o.status.replace(/ /g,'-');
+      const orderIdx = orders.findIndex(ord => String(ord.id) === String(o.id));
       html += '<tr style="border-top:0.5px solid var(--border)">';
       html += '<td style="padding:7px 8px;color:var(--text2)">'+(i+1)+'</td>';
       html += '<td style="padding:7px 8px">'+o.size+'</td>';
@@ -1092,6 +1092,7 @@ function doKhataSearch(){
       html += '<td style="padding:7px 8px;text-align:right">₹'+(parseFloat(o.amount)||0).toLocaleString("en-IN")+'</td>';
       html += '<td style="padding:7px 8px;text-align:right;color:#2d7a4f">₹'+(parseFloat(o.advance)||0).toLocaleString("en-IN")+'</td>';
       html += '<td style="padding:7px 8px;text-align:right;color:'+(bal>0?'#993C1D':'#2d7a4f')+'">₹'+bal.toLocaleString("en-IN")+'</td>';
+      html += '<td style="padding:7px 8px"><button class="btn sm" style="border-color:#534AB7;color:#534AB7" onclick="closeModal(\'khata\');openInvoice('+orderIdx+')">Invoice</button></td>';
       html += '</tr>';
     });
 
