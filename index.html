@@ -519,6 +519,166 @@ function resetFrameItems() {
     first.querySelector('.f_item_price').value = '';
   }
 }
+  // ─── INVOICE ──────────────────────────────────────────────
+var currentInvoiceIdx = -1;
+
+function openInvoice(idx) {
+  currentInvoiceIdx = idx;
+  const o = orders[idx];
+  const invNo = 'ASF-' + String(o.id).slice(-6);
+  const date = new Date(o.created || Date.now()).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+
+  const bal = parseFloat(o.balance) || 0;
+  const adv = parseFloat(o.advance) || 0;
+  const amt = parseFloat(o.amount) || 0;
+
+  let payStatus = '';
+  if(adv > amt) payStatus = '<span style="background:#E6F1FB;color:#185FA5;padding:3px 10px;border-radius:999px;font-size:12px">Credit ₹'+(adv-amt)+'</span>';
+  else if(bal === 0) payStatus = '<span style="background:#EAF3DE;color:#2d7a4f;padding:3px 10px;border-radius:999px;font-size:12px">Fully Paid ✅</span>';
+  else payStatus = '<span style="background:#FAECE7;color:#993C1D;padding:3px 10px;border-radius:999px;font-size:12px">Balance Due ₹'+bal+'</span>';
+
+  // Handle multiple items if exists
+  let itemsHtml = '';
+  if(o.items && o.items.length > 1) {
+    itemsHtml = o.items.map((item, i) => `
+      <tr>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee">${i+1}. ${item.size} Frame</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:center">${item.qty}</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:center">${item.ftype}"</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:right">₹${item.price}</td>
+      </tr>`).join('');
+  } else {
+    itemsHtml = `
+      <tr>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee">${o.size} Frame</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:center">${o.qty||1}</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:center">${o.ftype||'1'}"</td>
+        <td style="padding:8px 10px;border-bottom:0.5px solid #eee;text-align:right">₹${amt}</td>
+      </tr>`;
+  }
+
+  document.getElementById('invoiceContent').innerHTML = `
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:22px;font-weight:700;color:#D85A30">AS <span style="color:#1a1a18">Frames</span></div>
+        <div style="font-size:12px;color:#6b6a65;margin-top:2px">Custom Photo Frames</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:600">Invoice #${invNo}</div>
+        <div style="font-size:12px;color:#6b6a65">Date: ${date}</div>
+        <div style="margin-top:4px">${payStatus}</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div style="border-top:2px solid #D85A30;margin-bottom:1rem"></div>
+
+    <!-- Customer -->
+    <div style="background:#f7f5f0;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem">
+      <div style="font-size:11px;color:#6b6a65;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">Bill To</div>
+      <div style="font-size:15px;font-weight:600">${o.name}</div>
+      <div style="font-size:13px;color:#6b6a65">${o.phone}</div>
+    </div>
+
+    <!-- Items table -->
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1rem">
+      <thead>
+        <tr style="background:#f7f5f0">
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b6a65;text-transform:uppercase">Item</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:#6b6a65;text-transform:uppercase">Qty</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:#6b6a65;text-transform:uppercase">Type</th>
+          <th style="padding:8px 10px;text-align:right;font-size:11px;color:#6b6a65;text-transform:uppercase">Price</th>
+        </tr>
+      </thead>
+      <tbody>${itemsHtml}</tbody>
+    </table>
+
+    <!-- Totals -->
+    <div style="display:flex;justify-content:flex-end">
+      <div style="width:220px">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px">
+          <span style="color:#6b6a65">Total Amount</span>
+          <span>₹${amt}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px">
+          <span style="color:#2d7a4f">Advance Paid</span>
+          <span style="color:#2d7a4f">₹${adv}</span>
+        </div>
+        <div style="border-top:0.5px solid #ddd;margin:5px 0"></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px;font-weight:600">
+          <span style="color:${bal>0?'#993C1D':'#2d7a4f'}">Balance Due</span>
+          <span style="color:${bal>0?'#993C1D':'#2d7a4f'}">₹${bal}</span>
+        </div>
+      </div>
+    </div>
+
+    ${o.notes ? '<div style="margin-top:1rem;background:#f7f5f0;border-radius:8px;padding:.75rem 1rem"><div style="font-size:11px;color:#6b6a65;margin-bottom:3px">Notes</div><div style="font-size:13px">'+o.notes+'</div></div>' : ''}
+
+    <!-- Footer -->
+    <div style="margin-top:1.5rem;text-align:center;font-size:12px;color:#6b6a65;border-top:0.5px solid #eee;padding-top:1rem">
+      Thank you for choosing AS Frames! 🙏<br>
+      For queries, contact us on WhatsApp.
+    </div>
+  `;
+
+  openModal('invoice');
+}
+
+function printInvoice() {
+  const content = document.getElementById('invoiceContent').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Invoice - AS Frames</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 2rem; color: #1a1a18; max-width: 600px; margin: 0 auto; }
+        @media print { body { padding: 0; } button { display: none !important; } }
+      </style>
+    </head>
+    <body>${content}</body>
+    </html>
+  `);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function shareInvoiceWA() {
+  const o = orders[currentInvoiceIdx];
+  const invNo = 'ASF-' + String(o.id).slice(-6);
+  const bal = parseFloat(o.balance) || 0;
+  const adv = parseFloat(o.advance) || 0;
+  const amt = parseFloat(o.amount) || 0;
+  const date = new Date(o.created || Date.now()).toLocaleDateString('en-IN');
+
+  const msg = `*AS Frames — Invoice*
+Invoice #: ${invNo}
+Date: ${date}
+
+*Customer:* ${o.name}
+*Phone:* ${o.phone}
+
+*Order Details:*
+Size: ${o.size}
+Qty: ${o.qty || 1}
+Frame Type: ${o.ftype || '1'}"
+
+*Payment:*
+Total: ₹${amt}
+Advance Paid: ₹${adv}
+Balance Due: ₹${bal}
+
+${bal === 0 ? '✅ Fully Paid' : '⚠️ Please clear balance of ₹'+bal}
+
+Thank you for choosing AS Frames! 🙏`;
+
+  let phone = String(o.phone).replace(/\D/g, '');
+  if(phone.length === 10) phone = '91' + phone;
+  window.open('https://web.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
+}
 function hideSug() {
   const sug = document.getElementById('custSug');
   if (sug) sug.style.display = 'none';
@@ -686,6 +846,7 @@ function render() {
       <td class="actions">
         <button class="btn sm" onclick="openEdit(${idx})">Edit</button>
         <button class="btn sm wa" onclick="sendStatusWA(${idx})">WA</button>
+        <button class="btn sm" style="border-color:#534AB7;color:#534AB7" onclick="openInvoice(${idx})">Invoice</button>
         <button class="btn sm" style="border-color:#993C1D;color:#993C1D" onclick="deleteOrder(${idx})">Del</button>
       </td>`;
     tbody.appendChild(tr);
@@ -808,6 +969,20 @@ function resetIdle(){
 // Start the timer
 resetIdle();
 </script>
+   <!-- Invoice Modal -->
+<div class="overlay" id="invoiceModal">
+<div class="modal" style="max-width:580px">
+  <h2 style="margin-bottom:.5rem">Invoice</h2>
+  <div id="invoiceContent" style="background:#fff;border-radius:var(--radius);padding:1.5rem;color:#1a1a18">
+    <!-- filled by JS -->
+  </div>
+  <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;flex-wrap:wrap">
+    <button class="btn" onclick="closeModal('invoice')">Close</button>
+    <button class="btn" style="border-color:#534AB7;color:#534AB7" onclick="shareInvoiceWA()">📱 Share on WhatsApp</button>
+    <button class="btn primary" onclick="printInvoice()">🖨️ Print / Save PDF</button>
+  </div>
+</div>
+</div>
 <!-- Customer Khata Modal -->
 <div class="overlay" id="khataModal">
 <div class="modal" style="max-width:620px">
